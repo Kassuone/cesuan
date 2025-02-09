@@ -32,6 +32,12 @@
             font-size: 2.5em;
             text-shadow: 0 0 15px rgba(138,43,226,0.8);
             margin-bottom: 40px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        h1:hover {
+            transform: scale(1.05);
         }
 
         .modules {
@@ -116,11 +122,39 @@
             color: #888;
             font-size: 0.9em;
         }
+
+        .history-panel {
+            display: none;
+            background: rgba(42,10,66,0.9);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            border: 1px solid var(--main-color);
+            box-shadow: 0 0 20px rgba(138,43,226,0.3);
+        }
+
+        .history-title {
+            font-size: 1.2em;
+            color: #D8BFD8;
+            margin-bottom: 15px;
+        }
+
+        .history-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(138,43,226,0.1);
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>✨ 星缘价值测算 ✨</h1>
+        <h1 onclick="toggleHistory()">✨ 星缘价值测算 ✨</h1>
+
+        <div class="history-panel" id="historyPanel">
+            <div class="history-title">📜 历史记录</div>
+            <div id="historyContent"></div>
+        </div>
 
         <div class="modules">
             <!-- 姓名测算 -->
@@ -155,15 +189,55 @@
                     <div class="level">等级：-</div>
                 </div>
             </div>
+
+            <!-- 身份证测算 -->
+            <div class="module">
+                <div class="module-title">🆔 身份证价值测算</div>
+                <input type="text" placeholder="输入身份证后四位" id="idCardInput" maxlength="4">
+                <button onclick="calculateIdCard()">立即测算</button>
+                <div class="result" id="idCardResult">
+                    <div class="price">0.00</div>
+                    <div class="level">等级：-</div>
+                </div>
+            </div>
         </div>
 
-        <div class="notice">⚠️ 本测算仅供娱乐，请勿当真！</div>
+        <div class="notice">⚠️ 本测算仅供娱乐，结果随机生成，请勿当真！</div>
     </div>
 
     <script>
+        let history = [];
+        const historyPanel = document.getElementById('historyPanel');
+
         // 显示结果动画
         function showResult(element) {
             element.style.opacity = 1;
+        }
+
+        // 切换历史记录面板
+        function toggleHistory() {
+            historyPanel.style.display = historyPanel.style.display === 'block' ? 'none' : 'block';
+            if (historyPanel.style.display === 'block') {
+                renderHistory();
+            }
+        }
+
+        // 渲染历史记录
+        function renderHistory() {
+            const content = document.getElementById('historyContent');
+            content.innerHTML = history.length ?
+                history.map((item, index) => `
+                    <div class="history-item">
+                        <strong>#${index + 1}</strong> ${item.type}: ${item.input} → ¥${item.price} (${item.level})
+                    </div>
+                `).join('') :
+                '<div>暂无历史记录</div>';
+        }
+
+        // 添加历史记录
+        function addHistory(type, input, price, level) {
+            history.unshift({ type, input, price, level });
+            if (history.length > 10) history.pop();
         }
 
         // 姓名测算
@@ -172,7 +246,6 @@
             const result = document.getElementById('nameResult');
             if (!name) return alert("请输入姓名");
 
-            // 计算逻辑
             const baseValue = name.length * 188;
             const randomFactor = 0.8 + Math.random() * 0.5;
             const price = (baseValue * randomFactor).toFixed(2);
@@ -181,6 +254,7 @@
             result.querySelector('.price').textContent = `¥${price}`;
             result.querySelector('.level').textContent = `等级：${level}`;
             showResult(result);
+            addHistory('姓名测算', name, price, level);
         }
 
         // 手机号测算
@@ -189,7 +263,6 @@
             const result = document.getElementById('phoneResult');
             if (!/^\d{4}$/.test(phone)) return alert("请输入4位手机尾号");
 
-            // 计算逻辑
             const digitsSum = phone.split('').reduce((a,b) => a + parseInt(b), 0);
             const price = (digitsSum * 123.45).toFixed(2);
             const level = getLevel(price);
@@ -197,6 +270,7 @@
             result.querySelector('.price').textContent = `¥${price}`;
             result.querySelector('.level').textContent = `等级：${level}`;
             showResult(result);
+            addHistory('手机号测算', phone, price, level);
         }
 
         // 生日测算
@@ -205,15 +279,31 @@
             const result = document.getElementById('birthdayResult');
             if (!birthday) return alert("请选择生日");
 
-            // 计算逻辑
             const [year, month, day] = birthday.split('-');
             const sum = parseInt(year) + parseInt(month) + parseInt(day);
             const price = (sum % 8888 + 888).toFixed(2);
+            const level = getLevel(price);
+            
+            result.querySelector('.price').textContent = `¥${price}`;
+            result.querySelector('.level').textContent = `等级：${level}`;
+            showResult(result);
+            addHistory('生日测算', birthday, price, level);
+        }
+
+        // 身份证测算
+        function calculateIdCard() {
+            const idCard = document.getElementById('idCardInput').value.trim();
+            const result = document.getElementById('idCardResult');
+            if (!/^\d{4}$/.test(idCard)) return alert("请输入4位身份证尾号");
+
+            const digitsSum = idCard.split('').reduce((a,b) => a + parseInt(b), 0);
+            const price = (digitsSum * 168.88).toFixed(2);
             const level = getLevel(price);
 
             result.querySelector('.price').textContent = `¥${price}`;
             result.querySelector('.level').textContent = `等级：${level}`;
             showResult(result);
+            addHistory('身份证测算', idCard, price, level);
         }
 
         // 等级计算
