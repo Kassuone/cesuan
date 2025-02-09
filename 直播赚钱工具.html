@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>星缘测算 - 娱乐版</title>
+    <style>
+        :root {
+            --main-color: #8A2BE2;
+            --bg-color: #2A0A42;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: var(--bg-color);
+            color: white;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background-image:
+                radial-gradient(circle at 10% 10%, rgba(138,43,226,0.2) 0%, transparent 30%),
+                radial-gradient(circle at 90% 90%, rgba(138,43,226,0.2) 0%, transparent 30%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--main-color);
+            font-size: 2.5em;
+            text-shadow: 0 0 15px rgba(138,43,226,0.8);
+            margin-bottom: 40px;
+        }
+
+        .modules {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .module {
+            background: rgba(42,10,66,0.8);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid var(--main-color);
+            box-shadow: 0 0 20px rgba(138,43,226,0.3);
+            transition: transform 0.3s;
+        }
+
+        .module:hover {
+            transform: translateY(-5px);
+        }
+
+        .module-title {
+            font-size: 1.5em;
+            color: #D8BFD8;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--main-color);
+            color: white;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 10px var(--main-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, var(--main-color), #9400D3);
+            border: none;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        .result {
+            margin-top: 20px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .price {
+            font-size: 2em;
+            color: #FFD700;
+            margin: 10px 0;
+        }
+
+        .level {
+            font-size: 1.2em;
+            color: #7CFC00;
+        }
+
+        .notice {
+            text-align: center;
+            margin-top: 40px;
+            color: #888;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ 星缘价值测算 ✨</h1>
+
+        <div class="modules">
+            <!-- 姓名测算 -->
+            <div class="module">
+                <div class="module-title">📛 姓名价值测算</div>
+                <input type="text" placeholder="输入您的姓名" id="nameInput">
+                <button onclick="calculateName()">立即测算</button>
+                <div class="result" id="nameResult">
+                    <div class="price">0.00</div>
+                    <div class="level">等级：-</div>
+                </div>
+            </div>
+
+            <!-- 手机号测算 -->
+            <div class="module">
+                <div class="module-title">📱 手机号价值测算</div>
+                <input type="text" placeholder="输入手机后四位" id="phoneInput" maxlength="4">
+                <button onclick="calculatePhone()">立即测算</button>
+                <div class="result" id="phoneResult">
+                    <div class="price">0.00</div>
+                    <div class="level">等级：-</div>
+                </div>
+            </div>
+
+            <!-- 生日测算 -->
+            <div class="module">
+                <div class="module-title">🎂 生日价值测算</div>
+                <input type="date" id="birthdayInput">
+                <button onclick="calculateBirthday()">立即测算</button>
+                <div class="result" id="birthdayResult">
+                    <div class="price">0.00</div>
+                    <div class="level">等级：-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="notice">⚠️ 本测算仅供娱乐，请勿当真！</div>
+    </div>
+
+    <script>
+        // 显示结果动画
+        function showResult(element) {
+            element.style.opacity = 1;
+        }
+
+        // 姓名测算
+        function calculateName() {
+            const name = document.getElementById('nameInput').value.trim();
+            const result = document.getElementById('nameResult');
+            if (!name) return alert("请输入姓名");
+
+            // 计算逻辑
+            const baseValue = name.length * 188;
+            const randomFactor = 0.8 + Math.random() * 0.5;
+            const price = (baseValue * randomFactor).toFixed(2);
+            const level = getLevel(price);
+
+            result.querySelector('.price').textContent = `¥${price}`;
+            result.querySelector('.level').textContent = `等级：${level}`;
+            showResult(result);
+        }
+
+        // 手机号测算
+        function calculatePhone() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            const result = document.getElementById('phoneResult');
+            if (!/^\d{4}$/.test(phone)) return alert("请输入4位手机尾号");
+
+            // 计算逻辑
+            const digitsSum = phone.split('').reduce((a,b) => a + parseInt(b), 0);
+            const price = (digitsSum * 123.45).toFixed(2);
+            const level = getLevel(price);
+
+            result.querySelector('.price').textContent = `¥${price}`;
+            result.querySelector('.level').textContent = `等级：${level}`;
+            showResult(result);
+        }
+
+        // 生日测算
+        function calculateBirthday() {
+            const birthday = document.getElementById('birthdayInput').value;
+            const result = document.getElementById('birthdayResult');
+            if (!birthday) return alert("请选择生日");
+
+            // 计算逻辑
+            const [year, month, day] = birthday.split('-');
+            const sum = parseInt(year) + parseInt(month) + parseInt(day);
+            const price = (sum % 8888 + 888).toFixed(2);
+            const level = getLevel(price);
+
+            result.querySelector('.price').textContent = `¥${price}`;
+            result.querySelector('.level').textContent = `等级：${level}`;
+            showResult(result);
+        }
+
+        // 等级计算
+        function getLevel(price) {
+            const value = parseFloat(price);
+            if (value > 5000) return "SSS";
+            if (value > 3000) return "SS";
+            if (value > 2000) return "S";
+            if (value > 1000) return "A";
+            if (value > 500) return "B";
+            return "C";
+        }
+    </script>
+</body>
+</html>
