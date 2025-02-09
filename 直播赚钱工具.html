@@ -123,37 +123,97 @@
             font-size: 0.9em;
         }
 
-        .history-panel {
+        /* 弹窗样式 */
+        .modal {
             display: none;
-            background: rgba(42,10,66,0.9);
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 30px;
-            border: 1px solid var(--main-color);
-            box-shadow: 0 0 20px rgba(138,43,226,0.3);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
         }
 
-        .history-title {
-            font-size: 1.2em;
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            background: var(--bg-color);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid var(--main-color);
+            box-shadow: 0 0 30px rgba(138,43,226,0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            color: var(--main-color);
+        }
+
+        .close-btn {
+            cursor: pointer;
+            font-size: 1.5em;
             color: #D8BFD8;
-            margin-bottom: 15px;
+            transition: transform 0.3s;
+        }
+
+        .close-btn:hover {
+            transform: rotate(90deg);
         }
 
         .history-item {
-            margin: 10px 0;
-            padding: 10px;
+            margin: 15px 0;
+            padding: 15px;
             background: rgba(138,43,226,0.1);
             border-radius: 8px;
+        }
+
+        .clear-history-btn {
+            width: 100%;
+            padding: 12px;
+            background: #FF4444;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: opacity 0.3s;
+        }
+
+        .clear-history-btn:hover {
+            opacity: 0.8;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 onclick="toggleHistory()">✨ 星缘价值测算 ✨</h1>
+        <h1 onclick="showHistoryModal()">✨ 星缘价值测算 ✨</h1>
 
-        <div class="history-panel" id="historyPanel">
-            <div class="history-title">📜 历史记录</div>
-            <div id="historyContent"></div>
+        <!-- 历史记录弹窗 -->
+        <div class="modal" id="historyModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">📜 历史记录</div>
+                    <div class="close-btn" onclick="closeHistoryModal()">×</div>
+                </div>
+                <div id="historyContent"></div>
+                <button class="clear-history-btn" onclick="clearHistory()">
+                    🗑️ 清除所有历史记录
+                </button>
+            </div>
         </div>
 
         <div class="modules">
@@ -206,49 +266,67 @@
     </div>
 
     <script>
-        let history = [];
-        const historyPanel = document.getElementById('historyPanel');
+        const HISTORY_KEY = 'star_fortune_history';
+        const historyModal = document.getElementById('historyModal');
 
-        // 显示结果动画
+        // 初始化加载历史记录
+        let history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+
         function showResult(element) {
             element.style.opacity = 1;
         }
 
-        // 切换历史记录面板
-        function toggleHistory() {
-            historyPanel.style.display = historyPanel.style.display === 'block' ? 'none' : 'block';
-            if (historyPanel.style.display === 'block') {
-                renderHistory();
-            }
+        function showHistoryModal() {
+            historyModal.style.display = 'block';
+            renderHistory();
         }
 
-        // 渲染历史记录
+        function closeHistoryModal() {
+            historyModal.style.display = 'none';
+        }
+
         function renderHistory() {
             const content = document.getElementById('historyContent');
             content.innerHTML = history.length ?
                 history.map((item, index) => `
                     <div class="history-item">
-                        <strong>#${index + 1}</strong> ${item.type}: ${item.input} → ¥${item.price} (${item.level})
+                        <div><strong>#${index + 1}</strong> [${new Date(item.timestamp).toLocaleString()}]</div>
+                        <div>类型：${item.type}</div>
+                        <div>输入：${item.input}</div>
+                        <div>价值：¥${item.price} (${item.level})</div>
                     </div>
                 `).join('') :
-                '<div>暂无历史记录</div>';
+                '<div class="history-item">暂无历史记录</div>';
         }
 
-        // 添加历史记录
         function addHistory(type, input, price, level) {
-            history.unshift({ type, input, price, level });
-            if (history.length > 10) history.pop();
+            const record = {
+                type,
+                input,
+                price,
+                level,
+                timestamp: new Date().getTime()
+            };
+            history.unshift(record);
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
         }
 
-        // 姓名测算
+        function clearHistory() {
+            if (confirm('确定要清除所有历史记录吗？')) {
+                history = [];
+                localStorage.removeItem(HISTORY_KEY);
+                renderHistory();
+            }
+        }
+
+        // 测算功能
         function calculateName() {
             const name = document.getElementById('nameInput').value.trim();
             const result = document.getElementById('nameResult');
             if (!name) return alert("请输入姓名");
 
             const baseValue = name.length * 188;
-            const randomFactor = 0.8 + Math.random() * 0.5;
-            const price = (baseValue * randomFactor).toFixed(2);
+            const price = (baseValue * (0.8 + Math.random() * 0.5)).toFixed(2);
             const level = getLevel(price);
 
             result.querySelector('.price').textContent = `¥${price}`;
@@ -257,7 +335,6 @@
             addHistory('姓名测算', name, price, level);
         }
 
-        // 手机号测算
         function calculatePhone() {
             const phone = document.getElementById('phoneInput').value.trim();
             const result = document.getElementById('phoneResult');
@@ -273,7 +350,6 @@
             addHistory('手机号测算', phone, price, level);
         }
 
-        // 生日测算
         function calculateBirthday() {
             const birthday = document.getElementById('birthdayInput').value;
             const result = document.getElementById('birthdayResult');
@@ -283,14 +359,13 @@
             const sum = parseInt(year) + parseInt(month) + parseInt(day);
             const price = (sum % 8888 + 888).toFixed(2);
             const level = getLevel(price);
-            
+
             result.querySelector('.price').textContent = `¥${price}`;
             result.querySelector('.level').textContent = `等级：${level}`;
             showResult(result);
             addHistory('生日测算', birthday, price, level);
         }
 
-        // 身份证测算
         function calculateIdCard() {
             const idCard = document.getElementById('idCardInput').value.trim();
             const result = document.getElementById('idCardResult');
@@ -306,7 +381,6 @@
             addHistory('身份证测算', idCard, price, level);
         }
 
-        // 等级计算
         function getLevel(price) {
             const value = parseFloat(price);
             if (value > 5000) return "SSS";
@@ -315,6 +389,13 @@
             if (value > 1000) return "A";
             if (value > 500) return "B";
             return "C";
+        }
+
+        // 点击弹窗外区域关闭
+        window.onclick = function(event) {
+            if (event.target === historyModal) {
+                closeHistoryModal();
+            }
         }
     </script>
 </body>
